@@ -32,6 +32,7 @@ const state = {
   // Selecciones activas en el formulario
   currentCurrency: 'VES',
   currentRateType: 'BCV',
+  selectedRateType: 'BCV',
   currentRateValue: 45.20,
 
   // Vista y filtros de navegación
@@ -168,6 +169,81 @@ const calculator = {
   },
 
   /**
+   * Calcula la equivalencia dinámica cruzada para la interfaz de registro
+   * - Si currency es 'VES': muestra la equivalencia normalizada en USD ("≈ $X.XX USD"),
+   *   dividiendo entre la tasa activa.
+   * - Si currency es 'USD', 'EUR' o 'USDT': muestra la equivalencia calculada en Bolívares
+   *   ("≈ Bs. X.XX"), multiplicando por la tasa de cambio activa o tasa cruzada.
+   *
+   * @param {number|string} amountOriginal - Monto ingresado
+   * @param {string} currencyOriginal - 'VES' | 'USD' | 'EUR' | 'USDT'
+   * @param {object} [options] - Opciones contextuales ({ rateType, rateValue, rates })
+   * @returns {{ text: string, value: number, targetCurrency: string }}
+   */
+  calculateEquivalence(amountOriginal, currencyOriginal, options = {}) {
+    const amount = this.parseNumber(amountOriginal);
+    const rates = options.rates || (typeof state !== 'undefined' ? state.rates : {
+      BCV: 45.20,
+      BCV_EUR: 49.30,
+      PARALELO: 52.10,
+      EUR_USD: 1.09
+    });
+
+    const rateType = options.rateType || (typeof state !== 'undefined' ? (state.selectedRateType || state.currentRateType) : 'BCV');
+    const customRateVal = this.parseNumber(options.rateValue);
+
+    // 1. Moneda de pago: VES -> Mostrar equivalencia en USD
+    if (currencyOriginal === 'VES') {
+      if (amount <= 0) {
+        return { text: '≈ $0.00 USD', value: 0, targetCurrency: 'USD' };
+      }
+
+      let activeRate = customRateVal > 0 ? customRateVal : rates.BCV;
+      if (rateType === 'PARALELO' && (!customRateVal || customRateVal <= 0)) {
+        activeRate = rates.PARALELO;
+      } else if (rateType === 'BCV_EUR' && (!customRateVal || customRateVal <= 0)) {
+        activeRate = rates.BCV_EUR;
+      } else if (rateType === 'BCV' && (!customRateVal || customRateVal <= 0)) {
+        activeRate = rates.BCV;
+      }
+
+      const usdVal = activeRate > 0 ? Math.round((amount / activeRate) * 100) / 100 : 0;
+      return {
+        text: `≈ $${usdVal.toFixed(2)} USD`,
+        value: usdVal,
+        targetCurrency: 'USD'
+      };
+    }
+
+    // 2. Moneda de pago: USD, EUR o USDT -> Mostrar equivalencia en Bolívares (Bs.)
+    if (amount <= 0) {
+      return { text: '≈ Bs. 0.00', value: 0, targetCurrency: 'VES' };
+    }
+
+    let vesRate = rates.BCV;
+
+    if (currencyOriginal === 'USDT') {
+      // 1. USDT: Vinculado directamente a la tasa Paralelo (Binance P2P / Mercado libre)
+      vesRate = rates.PARALELO || 52.10;
+    } else if (currencyOriginal === 'USD') {
+      // 2. USD: Vinculado directamente a la tasa oficial del BCV
+      vesRate = rates.BCV || 45.20;
+    } else if (currencyOriginal === 'EUR') {
+      // 3. EUR: Vinculado directamente a la tasa oficial del Euro (BCV EUR)
+      vesRate = rates.BCV_EUR || (rates.BCV * (rates.EUR_USD || 1.09)) || 49.30;
+    } else {
+      vesRate = 1.0;
+    }
+
+    const vesVal = Math.round(amount * vesRate * 100) / 100;
+    return {
+      text: `≈ Bs. ${vesVal.toFixed(2)}`,
+      value: vesVal,
+      targetCurrency: 'VES'
+    };
+  },
+
+  /**
    * Formatea un número como divisa visual estándar
    */
   formatCurrency(value, currency = 'USD') {
@@ -227,7 +303,7 @@ const render = {
     form: document.getElementById('expense-form'),
     amountInput: document.getElementById('amount-input'),
     currencySymbol: document.getElementById('display-currency-symbol'),
-    previewUSD: document.getElementById('preview-usd-value'),
+    previewUSD: document.getElementById('equivalent-amount') || document.getElementById('preview-usd-value'),
     rateConfigCard: document.getElementById('rate-config-card'),
     rateValueInput: document.getElementById('rate-value-input'),
     rateInputLabel: document.querySelector('.rate-input-label'),
@@ -239,31 +315,57 @@ const render = {
   },
 
   /**
-   * Actualiza el badge de previsualización en vivo: ≈ $0.00 USD
+   * Actualiza la píldora de equivalencia dinámica cruzada
+   * (VES -> USD, o USD/EUR/USDT -> Bolívares)
    */
   livePreview() {
-    const rawAmount = this.elements.amountInput.value;
+    const rawAmount = this.elements.amountInput ? this.elements.amountInput.value : '';
     const amount = calculator.parseNumber(rawAmount);
 
-    if (amount <= 0) {
-      this.elements.previewUSD.textContent = '≈ $0.00 USD';
-      return;
-    }
-
+    let activeRateType = state.currentRateType;
     let rateVal = state.currentRateValue;
-    if (state.currentCurrency === 'USD' || state.currentCurrency === 'USDT') {
-      rateVal = 1.0;
+
+    if (state.currentCurrency === 'USDT') {
+      activeRateType = 'PARALELO';
+      rateVal = state.rates.PARALELO;
+    } else if (state.currentCurrency === 'USD') {
+      activeRateType = 'BCV';
+      rateVal = state.rates.BCV;
     } else if (state.currentCurrency === 'EUR') {
-      rateVal = state.rates.EUR_USD;
+      activeRateType = 'BCV_EUR';
+      rateVal = state.rates.BCV_EUR || (state.rates.BCV * (state.rates.EUR_USD || 1.09));
+    } else if (state.currentCurrency === 'VES') {
+      const activeRateRadio = document.querySelector('input[name="rateType"]:checked');
+      activeRateType = activeRateRadio ? activeRateRadio.value : (state.selectedRateType || 'BCV');
+
+      if (activeRateType === 'CUSTOM' && this.elements.rateValueInput) {
+        rateVal = calculator.parseNumber(this.elements.rateValueInput.value);
+      } else if (activeRateType === 'PARALELO') {
+        rateVal = state.rates.PARALELO;
+      } else if (activeRateType === 'BCV_EUR') {
+        rateVal = state.rates.BCV_EUR;
+      } else {
+        rateVal = state.rates.BCV;
+      }
     }
 
-    const usdVal = calculator.normalizeToUSD(
-      amount, 
-      state.currentCurrency, 
-      rateVal
+    const eq = calculator.calculateEquivalence(
+      amount,
+      state.currentCurrency,
+      {
+        rateType: activeRateType,
+        rateValue: rateVal,
+        rates: state.rates
+      }
     );
 
-    this.elements.previewUSD.textContent = `≈ $${usdVal.toFixed(2)} USD`;
+    const previewEl = this.elements.previewUSD || 
+      document.getElementById('equivalent-amount') || 
+      document.getElementById('preview-usd-value');
+
+    if (previewEl) {
+      previewEl.textContent = eq.text;
+    }
   },
 
   /**
@@ -306,16 +408,22 @@ const render = {
     if (state.currentRateType !== 'CUSTOM') {
       let targetRate = state.rates.BCV;
 
-      if (state.currentCurrency === 'EUR') {
-        targetRate = state.rates.EUR_USD;
-      } else {
+      if (state.currentCurrency === 'USDT') {
+        targetRate = state.rates.PARALELO;
+      } else if (state.currentCurrency === 'USD') {
+        targetRate = state.rates.BCV;
+      } else if (state.currentCurrency === 'EUR') {
+        targetRate = state.rates.BCV_EUR || (state.rates.BCV * (state.rates.EUR_USD || 1.09));
+      } else { // VES
         if (state.currentRateType === 'BCV') targetRate = state.rates.BCV;
         else if (state.currentRateType === 'BCV_EUR') targetRate = state.rates.BCV_EUR;
         else if (state.currentRateType === 'PARALELO') targetRate = state.rates.PARALELO;
       }
 
       state.currentRateValue = targetRate;
-      this.elements.rateValueInput.value = targetRate.toFixed(2);
+      if (this.elements.rateValueInput) {
+        this.elements.rateValueInput.value = targetRate.toFixed(2);
+      }
     }
   },
 
@@ -480,16 +588,19 @@ const handlers = {
     render.rateSectionVisibility();
 
     // Sincronizar tasa aplicable según divisa seleccionada
-    if (state.currentCurrency === 'VES') {
-      const activeRateRadio = document.querySelector('input[name="rateType"]:checked');
-      state.currentRateType = activeRateRadio ? activeRateRadio.value : 'BCV';
-      render.rateValueInput();
+    if (state.currentCurrency === 'USDT') {
+      state.currentRateType = 'PARALELO';
+      state.currentRateValue = state.rates.PARALELO;
+    } else if (state.currentCurrency === 'USD') {
+      state.currentRateType = 'BCV';
+      state.currentRateValue = state.rates.BCV;
     } else if (state.currentCurrency === 'EUR') {
-      state.currentRateType = 'PARIDAD_EUR';
-      state.currentRateValue = state.rates.EUR_USD;
-    } else { // USD o USDT
-      state.currentRateType = 'DIRECT';
-      state.currentRateValue = 1.0;
+      state.currentRateType = 'BCV_EUR';
+      state.currentRateValue = state.rates.BCV_EUR || (state.rates.BCV * (state.rates.EUR_USD || 1.09));
+    } else if (state.currentCurrency === 'VES') {
+      const activeRateRadio = document.querySelector('input[name="rateType"]:checked');
+      state.currentRateType = activeRateRadio ? activeRateRadio.value : (state.selectedRateType || 'BCV');
+      render.rateValueInput();
     }
 
     render.livePreview();
@@ -502,6 +613,7 @@ const handlers = {
     if (event.target.name !== 'rateType') return;
 
     state.currentRateType = event.target.value;
+    state.selectedRateType = event.target.value;
     render.rateValueInput();
     render.livePreview();
 
@@ -525,6 +637,7 @@ const handlers = {
       customRadio.checked = true;
       state.currentRateType = 'CUSTOM';
     }
+    state.selectedRateType = 'CUSTOM';
 
     render.livePreview();
   },
@@ -1984,6 +2097,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // Exponer objetos clave para coordinación global y pruebas
   window.state = state;
+  window.calculator = calculator;
   window.render = render;
   window.categoryManager = categoryManager;
   window.analyticsManager = analyticsManager;

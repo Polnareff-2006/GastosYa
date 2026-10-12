@@ -422,7 +422,7 @@ body {
 .rates-ticker {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  gap: 0.45rem;
+  gap: 0.4rem;
   margin-bottom: 0;
 }
 
@@ -497,13 +497,16 @@ body {
 .rate-pill {
   display: flex;
   align-items: center;
-  gap: 0.35rem;
-  padding: 0.4rem 0.5rem;
+  gap: 0.3rem;
+  padding: 0.38rem 0.45rem;
   border-radius: var(--radius-md);
   background: var(--bg-card);
   border: 1px solid var(--border-subtle);
-  font-size: 0.74rem;
+  font-size: 0.72rem;
   user-select: none;
+  white-space: nowrap;
+  min-width: 0;
+  overflow: hidden;
 }
 
 .rate-dot {
@@ -513,20 +516,33 @@ body {
   flex-shrink: 0;
 }
 
+.rate-name {
+  white-space: nowrap;
+  font-weight: 600;
+  font-size: 0.72rem;
+  line-height: 1;
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+}
+
 .rate-pill.bcv .rate-dot { background: var(--accent-cyan); box-shadow: 0 0 5px var(--accent-cyan); }
-.rate-pill.bcv .rate-name { color: var(--accent-cyan); font-weight: 600; }
+.rate-pill.bcv .rate-name { color: var(--accent-cyan); }
 
 .rate-pill.eur .rate-dot { background: var(--accent-amber); box-shadow: 0 0 5px var(--accent-amber); }
-.rate-pill.eur .rate-name { color: var(--accent-amber); font-weight: 600; }
+.rate-pill.eur .rate-name { color: var(--accent-amber); }
 
 .rate-pill.paralelo .rate-dot { background: var(--accent-purple); box-shadow: 0 0 5px var(--accent-purple); }
-.rate-pill.paralelo .rate-name { color: var(--accent-purple); font-weight: 600; }
+.rate-pill.paralelo .rate-name { color: var(--accent-purple); }
 
 .rate-val {
   margin-left: auto;
   font-family: var(--font-mono);
   font-weight: 700;
-  font-size: 0.78rem;
+  font-size: 0.76rem;
+  line-height: 1;
+  white-space: nowrap;
+  flex-shrink: 0;
 }
 
 /* --------------------------------------------------------------------------
@@ -608,7 +624,14 @@ body {
 
 .calc-icon { color: var(--primary); font-weight: 700; }
 .calc-label { color: var(--text-muted); }
-.calc-usd { color: var(--primary); font-family: var(--font-mono); font-weight: 700; font-size: 0.92rem; }
+.calc-usd,
+.calc-equiv {
+  color: var(--primary);
+  font-family: var(--font-mono);
+  font-weight: 700;
+  font-size: 0.92rem;
+  letter-spacing: -0.01em;
+}
 
 /* --------------------------------------------------------------------------
    6. Fieldsets & Segmented Controls (Monedas & Tasas)
@@ -1504,6 +1527,10 @@ input[type="radio"]:focus-visible + .category-pill { outline: 2px solid var(--pr
   .brand-title { font-size: 1.22rem; }
   .brand-row { gap: 0.45rem; }
   .header-right-actions { gap: 0.35rem; }
+  .rates-ticker { gap: 0.25rem; }
+  .rate-pill { padding: 0.32rem 0.35rem; gap: 0.22rem; font-size: 0.68rem; }
+  .rate-name { font-size: 0.68rem; }
+  .rate-val { font-size: 0.7rem; }
   .amount-hero-input { font-size: 2.2rem; }
   .categories-grid { grid-template-columns: repeat(2, 1fr); }
   .currency-control, .rate-control { grid-template-columns: repeat(2, 1fr); }

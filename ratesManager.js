@@ -3,7 +3,7 @@
  * GastosYa - Gestor Automatizado de Tasas de Cambio (Fase 4.4)
  * ============================================================================
  * Consume las cotizaciones oficiales y de mercado de DolarApi Venezuela
- * (BCV USD, Paralelo, BCV EUR), gestiona el respaldo y caché en localStorage,
+ * (BCV USD, Paralelo, Euro Oficial), gestiona el respaldo y caché en localStorage,
  * sincroniza opcionalmente con Supabase y preserva la edición manual del usuario.
  * ============================================================================
  */
@@ -93,6 +93,12 @@ const ratesManager = {
 
         this.updateTickerDOM();
         this.updateTimestampText(this.formatTimestamp(cached.lastUpdated, true));
+
+        // Refrescar inputs y cálculo en vivo con las tasas en caché
+        if (typeof window.render !== 'undefined') {
+          window.render.rateValueInput();
+          window.render.livePreview();
+        }
         return true;
       }
     } catch (err) {
