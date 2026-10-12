@@ -29,7 +29,6 @@
       <header class="app-header">
         <div class="brand-row">
           <div class="brand-info">
-            <span class="brand-badge">⚡ Rápido</span>
             <h1 class="brand-title">GastosYa</h1>
           </div>
 
@@ -62,21 +61,8 @@
               <span class="offline-text" id="offline-text">Offline</span>
             </div>
 
-            <!-- Indicador de Usuario y Botón Cerrar Sesión -->
-            <div class="user-session-badge" id="user-session-info" style="display: none;">
-              <span class="user-avatar-icon" aria-hidden="true">👤</span>
-              <span class="user-email-text" id="user-email-display" title="Usuario conectado"></span>
-              <button type="button" class="btn-logout" id="btn-logout" aria-label="Cerrar sesión" title="Cerrar sesión">
-                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-                  <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
-                  <polyline points="16 17 21 12 16 7"></polyline>
-                  <line x1="21" y1="12" x2="9" y2="12"></line>
-                </svg>
-                <span class="btn-logout-label">Salir</span>
-              </button>
-            </div>
-
-            <button type="button" class="btn-icon" id="btn-settings" aria-label="Selector de temas visuales y ajustes" aria-haspopup="dialog" aria-expanded="false" aria-controls="theme-modal">
+            <!-- Botón Accesible de Configuración y Cuenta -->
+            <button type="button" class="btn-icon" id="btn-open-settings" aria-label="Abrir configuración y cuenta" aria-haspopup="dialog" aria-expanded="false" aria-controls="modal-settings" title="Configuración">
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                 <path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/>
                 <circle cx="12" cy="12" r="3"/>
@@ -372,21 +358,22 @@
 </div>
 
   <!-- =====================================================================
-       Modal de Configuración y Selector de Temas (#theme-modal)
+       Modal de Configuración (#modal-settings)
        ===================================================================== -->
-  <div id="theme-modal" class="theme-modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="theme-modal-title" aria-hidden="true">
-    <div class="theme-modal-card">
+  <div id="modal-settings" class="theme-modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="settings-modal-title" aria-hidden="true">
+    <div class="theme-modal-card settings-modal-card">
       
+      <!-- a) Encabezado de Configuración -->
       <div class="theme-modal-header">
         <div class="theme-modal-title-wrap">
-          <h2 id="theme-modal-title" class="theme-modal-title">
-            <span class="modal-icon" aria-hidden="true">🎨</span>
-            <span>Temas del Sistema</span>
+          <h2 id="settings-modal-title" class="theme-modal-title">
+            <span class="modal-icon" aria-hidden="true">⚙️</span>
+            <span>Configuración</span>
           </h2>
-          <span class="theme-modal-subtitle">Personaliza la estética con 8 paletas suaves</span>
+          <span class="theme-modal-subtitle">Cuenta, apariencia y preferencias</span>
         </div>
 
-        <button type="button" class="theme-modal-close-btn" id="btn-close-theme-modal" aria-label="Cerrar selector de temas">
+        <button type="button" class="theme-modal-close-btn" id="btn-close-settings-modal" aria-label="Cerrar configuración">
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
             <line x1="18" y1="6" x2="6" y2="18"></line>
             <line x1="6" y1="6" x2="18" y2="18"></line>
@@ -394,114 +381,161 @@
         </button>
       </div>
 
-      <div class="theme-modal-body">
-        <div class="themes-grid" role="radiogroup" aria-label="Paletas visuales">
-          
-          <!-- 1. Dark Slate (Por defecto) -->
-          <button type="button" class="theme-option-btn is-active" data-theme-id="dark-slate" role="radio" aria-checked="true" aria-label="Tema Dark Slate">
-            <span class="theme-swatch" style="--swatch-bg: #0e1626; --swatch-accent: #10b981;">
-              <span class="swatch-base" style="background-color: #0e1626;"></span>
-              <span class="swatch-accent-dot" style="background-color: #10b981;"></span>
-            </span>
-            <div class="theme-info">
-              <span class="theme-name">Dark Slate</span>
-              <span class="theme-tag">Por defecto</span>
-            </div>
-            <span class="theme-check-badge" aria-hidden="true">✓</span>
-          </button>
+      <div class="theme-modal-body settings-modal-body">
+        
+        <!-- b) Sección: Cuenta de Usuario -->
+        <section class="settings-section settings-account-section" aria-labelledby="section-account-title">
+          <div class="settings-section-header">
+            <span class="settings-section-icon" aria-hidden="true">👤</span>
+            <h3 id="section-account-title" class="settings-section-title">Cuenta de Usuario</h3>
+          </div>
 
-          <!-- 2. Lila -->
-          <button type="button" class="theme-option-btn" data-theme-id="lila" role="radio" aria-checked="false" aria-label="Tema Lila">
-            <span class="theme-swatch" style="--swatch-bg: #1c1826; --swatch-accent: #c4b5fd;">
-              <span class="swatch-base" style="background-color: #1c1826;"></span>
-              <span class="swatch-accent-dot" style="background-color: #c4b5fd;"></span>
-            </span>
-            <div class="theme-info">
-              <span class="theme-name">Lila Suave</span>
-              <span class="theme-tag">Lavanda tenue</span>
+          <div class="settings-account-card">
+            <div class="settings-avatar-badge" aria-hidden="true">
+              <span class="settings-avatar-emoji">👤</span>
             </div>
-            <span class="theme-check-badge" aria-hidden="true">✓</span>
-          </button>
-
-          <!-- 3. Beige (Modo Claro) -->
-          <button type="button" class="theme-option-btn" data-theme-id="beige" role="radio" aria-checked="false" aria-label="Tema Beige Modo Claro">
-            <span class="theme-swatch" style="--swatch-bg: #f7f5f0; --swatch-accent: #a88d75;">
-              <span class="swatch-base" style="background-color: #f7f5f0;"></span>
-              <span class="swatch-accent-dot" style="background-color: #a88d75;"></span>
-            </span>
-            <div class="theme-info">
-              <span class="theme-name">Beige Lino</span>
-              <span class="theme-tag">Modo claro</span>
+            <div class="settings-account-info">
+              <span class="settings-account-label">Correo registrado</span>
+              <span class="settings-user-email" id="settings-user-email">Cargando usuario...</span>
+              <div class="settings-account-status-wrap">
+                <span class="settings-status-dot" aria-hidden="true"></span>
+                <span class="settings-account-status" id="settings-account-status">Sesión activa</span>
+              </div>
             </div>
-            <span class="theme-check-badge" aria-hidden="true">✓</span>
-          </button>
+          </div>
+        </section>
 
-          <!-- 4. Rosa -->
-          <button type="button" class="theme-option-btn" data-theme-id="rosa" role="radio" aria-checked="false" aria-label="Tema Rosa">
-            <span class="theme-swatch" style="--swatch-bg: #211a20; --swatch-accent: #f472b6;">
-              <span class="swatch-base" style="background-color: #211a20;"></span>
-              <span class="swatch-accent-dot" style="background-color: #f472b6;"></span>
-            </span>
-            <div class="theme-info">
-              <span class="theme-name">Rosa Cuarzo</span>
-              <span class="theme-tag">Ciruela suave</span>
+        <!-- c) Sección: Apariencia (Selector de 8 Temas) -->
+        <section class="settings-section settings-appearance-section" aria-labelledby="section-appearance-title">
+          <div class="settings-section-header">
+            <span class="settings-section-icon" aria-hidden="true">🎨</span>
+            <div class="settings-section-title-wrap">
+              <h3 id="section-appearance-title" class="settings-section-title">Apariencia</h3>
+              <span class="settings-section-subtitle">Elige entre 8 paletas suaves optimizadas</span>
             </div>
-            <span class="theme-check-badge" aria-hidden="true">✓</span>
-          </button>
+          </div>
 
-          <!-- 5. Cian -->
-          <button type="button" class="theme-option-btn" data-theme-id="cian" role="radio" aria-checked="false" aria-label="Tema Cian">
-            <span class="theme-swatch" style="--swatch-bg: #13202b; --swatch-accent: #38bdf8;">
-              <span class="swatch-base" style="background-color: #13202b;"></span>
-              <span class="swatch-accent-dot" style="background-color: #38bdf8;"></span>
-            </span>
-            <div class="theme-info">
-              <span class="theme-name">Cian Abisal</span>
-              <span class="theme-tag">Turquesa suave</span>
-            </div>
-            <span class="theme-check-badge" aria-hidden="true">✓</span>
-          </button>
+          <div class="themes-grid" role="radiogroup" aria-label="Paletas visuales">
+            
+            <!-- 1. Dark Slate (Por defecto) -->
+            <button type="button" class="theme-option-btn is-active" data-theme-id="dark-slate" role="radio" aria-checked="true" aria-label="Tema Dark Slate">
+              <span class="theme-swatch" style="--swatch-bg: #0e1626; --swatch-accent: #10b981;">
+                <span class="swatch-base" style="background-color: #0e1626;"></span>
+                <span class="swatch-accent-dot" style="background-color: #10b981;"></span>
+              </span>
+              <div class="theme-info">
+                <span class="theme-name">Dark Slate</span>
+                <span class="theme-tag">Por defecto</span>
+              </div>
+              <span class="theme-check-badge" aria-hidden="true">✓</span>
+            </button>
 
-          <!-- 6. Verde -->
-          <button type="button" class="theme-option-btn" data-theme-id="verde" role="radio" aria-checked="false" aria-label="Tema Verde">
-            <span class="theme-swatch" style="--swatch-bg: #16211a; --swatch-accent: #86efac;">
-              <span class="swatch-base" style="background-color: #16211a;"></span>
-              <span class="swatch-accent-dot" style="background-color: #86efac;"></span>
-            </span>
-            <div class="theme-info">
-              <span class="theme-name">Verde Musgo</span>
-              <span class="theme-tag">Salvia pastel</span>
-            </div>
-            <span class="theme-check-badge" aria-hidden="true">✓</span>
-          </button>
+            <!-- 2. Lila -->
+            <button type="button" class="theme-option-btn" data-theme-id="lila" role="radio" aria-checked="false" aria-label="Tema Lila">
+              <span class="theme-swatch" style="--swatch-bg: #1c1826; --swatch-accent: #c4b5fd;">
+                <span class="swatch-base" style="background-color: #1c1826;"></span>
+                <span class="swatch-accent-dot" style="background-color: #c4b5fd;"></span>
+              </span>
+              <div class="theme-info">
+                <span class="theme-name">Lila Suave</span>
+                <span class="theme-tag">Lavanda tenue</span>
+              </div>
+              <span class="theme-check-badge" aria-hidden="true">✓</span>
+            </button>
 
-          <!-- 7. Nordic -->
-          <button type="button" class="theme-option-btn" data-theme-id="nordic" role="radio" aria-checked="false" aria-label="Tema Nordic">
-            <span class="theme-swatch" style="--swatch-bg: #1e293b; --swatch-accent: #93c5fd;">
-              <span class="swatch-base" style="background-color: #1e293b;"></span>
-              <span class="swatch-accent-dot" style="background-color: #93c5fd;"></span>
-            </span>
-            <div class="theme-info">
-              <span class="theme-name">Nordic Blue</span>
-              <span class="theme-tag">Azul hielo</span>
-            </div>
-            <span class="theme-check-badge" aria-hidden="true">✓</span>
-          </button>
+            <!-- 3. Beige (Modo Claro) -->
+            <button type="button" class="theme-option-btn" data-theme-id="beige" role="radio" aria-checked="false" aria-label="Tema Beige Modo Claro">
+              <span class="theme-swatch" style="--swatch-bg: #f7f5f0; --swatch-accent: #a88d75;">
+                <span class="swatch-base" style="background-color: #f7f5f0;"></span>
+                <span class="swatch-accent-dot" style="background-color: #a88d75;"></span>
+              </span>
+              <div class="theme-info">
+                <span class="theme-name">Beige Lino</span>
+                <span class="theme-tag">Modo claro</span>
+              </div>
+              <span class="theme-check-badge" aria-hidden="true">✓</span>
+            </button>
 
-          <!-- 8. OLED -->
-          <button type="button" class="theme-option-btn" data-theme-id="oled" role="radio" aria-checked="false" aria-label="Tema OLED">
-            <span class="theme-swatch" style="--swatch-bg: #000000; --swatch-accent: #10b981;">
-              <span class="swatch-base" style="background-color: #000000;"></span>
-              <span class="swatch-accent-dot" style="background-color: #10b981;"></span>
-            </span>
-            <div class="theme-info">
-              <span class="theme-name">OLED Puro</span>
-              <span class="theme-tag">Negro absoluto</span>
-            </div>
-            <span class="theme-check-badge" aria-hidden="true">✓</span>
-          </button>
+            <!-- 4. Rosa -->
+            <button type="button" class="theme-option-btn" data-theme-id="rosa" role="radio" aria-checked="false" aria-label="Tema Rosa">
+              <span class="theme-swatch" style="--swatch-bg: #211a20; --swatch-accent: #f472b6;">
+                <span class="swatch-base" style="background-color: #211a20;"></span>
+                <span class="swatch-accent-dot" style="background-color: #f472b6;"></span>
+              </span>
+              <div class="theme-info">
+                <span class="theme-name">Rosa Cuarzo</span>
+                <span class="theme-tag">Ciruela suave</span>
+              </div>
+              <span class="theme-check-badge" aria-hidden="true">✓</span>
+            </button>
 
-        </div>
+            <!-- 5. Cian -->
+            <button type="button" class="theme-option-btn" data-theme-id="cian" role="radio" aria-checked="false" aria-label="Tema Cian">
+              <span class="theme-swatch" style="--swatch-bg: #13202b; --swatch-accent: #38bdf8;">
+                <span class="swatch-base" style="background-color: #13202b;"></span>
+                <span class="swatch-accent-dot" style="background-color: #38bdf8;"></span>
+              </span>
+              <div class="theme-info">
+                <span class="theme-name">Cian Abisal</span>
+                <span class="theme-tag">Turquesa suave</span>
+              </div>
+              <span class="theme-check-badge" aria-hidden="true">✓</span>
+            </button>
+
+            <!-- 6. Verde -->
+            <button type="button" class="theme-option-btn" data-theme-id="verde" role="radio" aria-checked="false" aria-label="Tema Verde">
+              <span class="theme-swatch" style="--swatch-bg: #16211a; --swatch-accent: #86efac;">
+                <span class="swatch-base" style="background-color: #16211a;"></span>
+                <span class="swatch-accent-dot" style="background-color: #86efac;"></span>
+              </span>
+              <div class="theme-info">
+                <span class="theme-name">Verde Musgo</span>
+                <span class="theme-tag">Salvia pastel</span>
+              </div>
+              <span class="theme-check-badge" aria-hidden="true">✓</span>
+            </button>
+
+            <!-- 7. Nordic -->
+            <button type="button" class="theme-option-btn" data-theme-id="nordic" role="radio" aria-checked="false" aria-label="Tema Nordic">
+              <span class="theme-swatch" style="--swatch-bg: #1e293b; --swatch-accent: #93c5fd;">
+                <span class="swatch-base" style="background-color: #1e293b;"></span>
+                <span class="swatch-accent-dot" style="background-color: #93c5fd;"></span>
+              </span>
+              <div class="theme-info">
+                <span class="theme-name">Nordic Blue</span>
+                <span class="theme-tag">Azul hielo</span>
+              </div>
+              <span class="theme-check-badge" aria-hidden="true">✓</span>
+            </button>
+
+            <!-- 8. OLED -->
+            <button type="button" class="theme-option-btn" data-theme-id="oled" role="radio" aria-checked="false" aria-label="Tema OLED">
+              <span class="theme-swatch" style="--swatch-bg: #000000; --swatch-accent: #10b981;">
+                <span class="swatch-base" style="background-color: #000000;"></span>
+                <span class="swatch-accent-dot" style="background-color: #10b981;"></span>
+              </span>
+              <div class="theme-info">
+                <span class="theme-name">OLED Puro</span>
+                <span class="theme-tag">Negro absoluto</span>
+              </div>
+              <span class="theme-check-badge" aria-hidden="true">✓</span>
+            </button>
+
+          </div>
+        </section>
+
+        <!-- d) Sección: Sesión (Cerrar Sesión) -->
+        <section class="settings-section settings-session-section">
+          <button type="button" class="btn-logout-modal" id="btn-logout-modal" aria-label="Cerrar sesión activa">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
+              <polyline points="16 17 21 12 16 7"></polyline>
+              <line x1="21" y1="12" x2="9" y2="12"></line>
+            </svg>
+            <span>Cerrar Sesión</span>
+          </button>
+        </section>
+
       </div>
 
     </div>

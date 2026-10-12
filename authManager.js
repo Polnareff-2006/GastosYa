@@ -94,6 +94,10 @@ const authManager = {
       switchPrompt: document.getElementById('auth-switch-prompt'),
       btnSwitchMode: document.getElementById('btn-auth-switch-mode'),
       btnTogglePassword: document.getElementById('btn-toggle-password'),
+      settingsModal: document.getElementById('modal-settings'),
+      settingsUserEmail: document.getElementById('settings-user-email'),
+      settingsAccountStatus: document.getElementById('settings-account-status'),
+      btnLogoutModal: document.getElementById('btn-logout-modal'),
       userSessionInfo: document.getElementById('user-session-info'),
       userEmailDisplay: document.getElementById('user-email-display'),
       btnLogout: document.getElementById('btn-logout')
@@ -110,6 +114,7 @@ const authManager = {
       tabSignup,
       btnSwitchMode,
       btnTogglePassword,
+      btnLogoutModal,
       btnLogout
     } = this.elements;
 
@@ -140,7 +145,12 @@ const authManager = {
       form.addEventListener('submit', (e) => this.handleSubmit(e));
     }
 
-    // Botón Cerrar Sesión
+    // Botón Cerrar Sesión en modal de configuración
+    if (btnLogoutModal) {
+      btnLogoutModal.addEventListener('click', () => this.signOut());
+    }
+
+    // Botón Cerrar Sesión fallback
     if (btnLogout) {
       btnLogout.addEventListener('click', () => this.signOut());
     }
@@ -282,8 +292,21 @@ const authManager = {
    * Cierra la sesión activa del usuario
    */
   async signOut() {
+    // Cerrar modal de ajustes si está abierto
+    const settingsModal = this.elements.settingsModal || document.getElementById('modal-settings');
+    if (settingsModal) {
+      settingsModal.classList.remove('is-open');
+      settingsModal.setAttribute('aria-hidden', 'true');
+    }
+    if (window.themeManager && typeof window.themeManager.closeModal === 'function') {
+      window.themeManager.closeModal();
+    }
+
     const client = window.supabaseClient;
-    if (!client) return;
+    if (!client) {
+      this.handleSessionUpdate('SIGNED_OUT', null);
+      return;
+    }
 
     try {
       this.setLoading(true);
@@ -325,7 +348,7 @@ const authManager = {
     this.currentUser = session?.user || null;
 
     if (session && session.user) {
-      // Usuario autenticado: desbloquear app y cerrar modal
+      // Usuario autenticado: desbloquear app y cerrar modal de login
       this.lockApp(false);
       this.updateUserSessionUI(session.user.email);
       this.clearAlert();
@@ -333,7 +356,12 @@ const authManager = {
         this.elements.form.reset();
       }
     } else {
-      // Sin sesión: bloquear app y abrir modal de login
+      // Sin sesión: cerrar modal de ajustes si estuviera abierto, bloquear app y abrir login
+      const settingsModal = this.elements.settingsModal || document.getElementById('modal-settings');
+      if (settingsModal) {
+        settingsModal.classList.remove('is-open');
+        settingsModal.setAttribute('aria-hidden', 'true');
+      }
       this.lockApp(true);
       this.updateUserSessionUI(null);
     }
@@ -349,16 +377,25 @@ const authManager = {
   },
 
   /**
-   * Actualiza el indicador de sesión en el encabezado
+   * Actualiza el indicador de sesión tanto en el modal de configuración como en la app
    * @param {string|null} email
    */
   updateUserSessionUI(email) {
-    const { userSessionInfo, userEmailDisplay } = this.elements;
+    const { 
+      settingsUserEmail, 
+      settingsAccountStatus, 
+      userSessionInfo, 
+      userEmailDisplay 
+    } = this.elements;
 
     if (email) {
+      if (settingsUserEmail) settingsUserEmail.textContent = email;
+      if (settingsAccountStatus) settingsAccountStatus.textContent = 'Sesión activa y sincronizada';
       if (userSessionInfo) userSessionInfo.style.display = 'inline-flex';
       if (userEmailDisplay) userEmailDisplay.textContent = email;
     } else {
+      if (settingsUserEmail) settingsUserEmail.textContent = 'Sin sesión iniciada';
+      if (settingsAccountStatus) settingsAccountStatus.textContent = 'No conectado';
       if (userSessionInfo) userSessionInfo.style.display = 'none';
       if (userEmailDisplay) userEmailDisplay.textContent = '';
     }

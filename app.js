@@ -1756,9 +1756,9 @@ const themeManager = {
    * - Configura la accesibilidad y eventos (apertura, cierre por botón, Escape y clic exterior).
    */
   init() {
-    this.elements.modal = document.getElementById('theme-modal');
-    this.elements.triggerBtn = document.getElementById('btn-settings');
-    this.elements.closeBtn = document.getElementById('btn-close-theme-modal');
+    this.elements.modal = document.getElementById('modal-settings') || document.getElementById('theme-modal');
+    this.elements.triggerBtn = document.getElementById('btn-open-settings') || document.getElementById('btn-settings');
+    this.elements.closeBtn = document.getElementById('btn-close-settings-modal') || document.getElementById('btn-close-theme-modal');
     this.elements.optionButtons = Array.from(document.querySelectorAll('.theme-option-btn'));
 
     // Leer tema de localStorage con verificación estricta de lista permitida
@@ -1844,7 +1844,7 @@ const themeManager = {
   },
 
   /**
-   * Abre el panel/modal selector de temas y gestiona el foco
+   * Abre el panel/modal de configuración y gestiona el foco
    */
   openModal() {
     if (!this.elements.modal) return;
@@ -1853,6 +1853,12 @@ const themeManager = {
 
     if (this.elements.triggerBtn) {
       this.elements.triggerBtn.setAttribute('aria-expanded', 'true');
+    }
+
+    // Sincronizar reactivamente datos de cuenta de usuario al abrir el modal
+    if (window.authManager && typeof window.authManager.updateUserSessionUI === 'function') {
+      const user = window.authManager.currentUser;
+      window.authManager.updateUserSessionUI(user?.email || null);
     }
 
     // Foco ergonómico en la opción activa actual o en el botón de cerrar
@@ -1865,7 +1871,7 @@ const themeManager = {
   },
 
   /**
-   * Cierra el panel/modal selector de temas y devuelve el foco
+   * Cierra el panel/modal de configuración y devuelve el foco
    */
   closeModal() {
     if (!this.elements.modal) return;
@@ -1885,6 +1891,9 @@ const themeManager = {
     return this.elements.modal && this.elements.modal.classList.contains('is-open');
   }
 };
+
+// Exponer globalmente para coordinación con authManager
+window.themeManager = themeManager;
 
 // ============================================================================
 // 10. INICIALIZACIÓN DE LA APLICACIÓN (App Boot)
