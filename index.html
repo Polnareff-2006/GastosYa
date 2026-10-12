@@ -1,0 +1,722 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <title>GastosYa | Registro Rápido Multimoneda</title>
+  
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@500;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  
+  <link rel="stylesheet" href="styles.css">
+  
+  <!-- Prevención instantánea de FOUC al cargar temas persistidos -->
+  <script>
+    (function() {
+      try {
+        var savedTheme = localStorage.getItem('gastosya_theme') || 'dark-slate';
+        document.documentElement.setAttribute('data-theme', savedTheme);
+      } catch (e) {}
+    })();
+  </script>
+</head>
+<body>
+  <div class="app-viewport">
+    <div class="mobile-container">
+      
+      <!-- Encabezado Global de la Aplicación -->
+      <header class="app-header">
+        <div class="brand-row">
+          <div class="brand-info">
+            <span class="brand-badge">⚡ Rápido</span>
+            <h1 class="brand-title">GastosYa</h1>
+          </div>
+
+          <!-- Navegación para Pantallas Grandes (Desktop Nav) -->
+          <nav class="desktop-nav" aria-label="Navegación principal">
+            <button type="button" class="nav-item is-active" data-view="view-register" aria-selected="true" aria-controls="view-register">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M12 5v14M5 12h14"/>
+              </svg>
+              <span>Registrar</span>
+            </button>
+            <button type="button" class="nav-item" data-view="view-history" aria-selected="false" aria-controls="view-history">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M12 8v4l3 3m6-3a9 9 0 1 1-18 0 9 9 0 0 1 18 0z"/>
+              </svg>
+              <span>Historial</span>
+            </button>
+            <button type="button" class="nav-item" data-view="view-analytics" aria-selected="false" aria-controls="view-analytics">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M18 20V10m-6 10V4m-6 10v6"/>
+              </svg>
+              <span>Resumen</span>
+            </button>
+          </nav>
+
+          <div class="header-right-actions">
+            <!-- Indicador Offline / Sincronización -->
+            <div class="offline-pill" id="offline-pill" style="display: none;" title="Modo sin conexión">
+              <span class="offline-dot"></span>
+              <span class="offline-text" id="offline-text">Offline</span>
+            </div>
+
+            <!-- Indicador de Usuario y Botón Cerrar Sesión -->
+            <div class="user-session-badge" id="user-session-info" style="display: none;">
+              <span class="user-avatar-icon" aria-hidden="true">👤</span>
+              <span class="user-email-text" id="user-email-display" title="Usuario conectado"></span>
+              <button type="button" class="btn-logout" id="btn-logout" aria-label="Cerrar sesión" title="Cerrar sesión">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
+                  <polyline points="16 17 21 12 16 7"></polyline>
+                  <line x1="21" y1="12" x2="9" y2="12"></line>
+                </svg>
+                <span class="btn-logout-label">Salir</span>
+              </button>
+            </div>
+
+            <button type="button" class="btn-icon" id="btn-settings" aria-label="Selector de temas visuales y ajustes" aria-haspopup="dialog" aria-expanded="false" aria-controls="theme-modal">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/>
+                <circle cx="12" cy="12" r="3"/>
+              </svg>
+            </button>
+          </div>
+        </div>
+      </header>
+
+      <!-- Contenedor Principal de Vistas -->
+      <main class="app-main">
+
+        <!-- 1. VISTA: REGISTRO DE GASTO (#view-register) -->
+        <section id="view-register" class="app-view is-active" aria-label="Registro de gastos">
+          
+          <!-- Indicador de tasas del mercado (USD, EUR, Paralelo) y controles de sincronización -->
+          <div class="rates-ticker-wrapper">
+            <div class="rates-ticker" aria-label="Tasas de cambio vigentes">
+              <div class="rate-pill bcv" id="rate-tag-bcv" title="BCV Dólar Oficial">
+                <span class="rate-dot"></span>
+                <span class="rate-name">BCV $</span>
+                <strong class="rate-val">45.20</strong>
+              </div>
+              <div class="rate-pill eur" id="rate-tag-eur" title="BCV Euro Oficial">
+                <span class="rate-dot"></span>
+                <span class="rate-name">EUR BCV</span>
+                <strong class="rate-val">49.30</strong>
+              </div>
+              <div class="rate-pill paralelo" id="rate-tag-paralelo" title="Dólar Paralelo">
+                <span class="rate-dot"></span>
+                <span class="rate-name">Paralelo</span>
+                <strong class="rate-val">52.10</strong>
+              </div>
+            </div>
+
+            <!-- Barra de estado y actualización manual de tasas -->
+            <div class="rates-meta-bar">
+              <div class="rates-meta-left">
+                <span class="rates-status-dot" aria-hidden="true"></span>
+                <span class="rates-updated-text" id="rates-updated-time">Actualizando tasas...</span>
+              </div>
+              <button type="button" class="btn-refresh-rates" id="btn-refresh-rates" aria-label="Actualizar tasas de cambio" title="Actualizar tasas de cambio">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" class="refresh-icon">
+                  <path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"/>
+                </svg>
+                <span class="refresh-label">Actualizar</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- Formulario de Entrada Rápida de Gasto -->
+          <form id="expense-form" class="expense-form" novalidate>
+          
+          <!-- Bloque Principal de Monto Dominante -->
+          <section class="amount-hero-card">
+            <label for="amount-input" class="amount-hero-label">Monto del gasto</label>
+            <div class="amount-input-wrapper">
+              <span class="amount-currency-symbol" id="display-currency-symbol">Bs.</span>
+              <input 
+                type="text" 
+                id="amount-input" 
+                name="amountOriginal"
+                class="amount-hero-input" 
+                inputmode="decimal" 
+                placeholder="0.00" 
+                autocomplete="off"
+                required
+                aria-describedby="conversion-preview"
+              >
+            </div>
+            <!-- Previsualización en vivo del cálculo a USD -->
+            <div class="conversion-preview-bar" id="conversion-preview">
+              <span class="calc-icon">⇄</span>
+              <span class="calc-label">Equivalente:</span>
+              <strong class="calc-usd" id="preview-usd-value">≈ $0.00 USD</strong>
+            </div>
+          </section>
+
+          <!-- Selector de Moneda de Origen (VES, USD, EUR, USDT) -->
+          <fieldset class="form-fieldset">
+            <legend class="fieldset-legend">Moneda de pago</legend>
+            <div class="segmented-control currency-control" role="radiogroup" aria-label="Moneda de origen">
+              <input type="radio" name="currencyOriginal" id="curr-ves" value="VES" checked class="visually-hidden">
+              <label for="curr-ves" class="control-chip">
+                <span class="chip-flag">🇻🇪</span>
+                <span class="chip-title">VES</span>
+              </label>
+
+              <input type="radio" name="currencyOriginal" id="curr-usd" value="USD" class="visually-hidden">
+              <label for="curr-usd" class="control-chip">
+                <span class="chip-flag">💵</span>
+                <span class="chip-title">USD</span>
+              </label>
+
+              <input type="radio" name="currencyOriginal" id="curr-eur" value="EUR" class="visually-hidden">
+              <label for="curr-eur" class="control-chip">
+                <span class="chip-flag">💶</span>
+                <span class="chip-title">EUR</span>
+              </label>
+
+              <input type="radio" name="currencyOriginal" id="curr-usdt" value="USDT" class="visually-hidden">
+              <label for="curr-usdt" class="control-chip">
+                <span class="chip-flag">🟢</span>
+                <span class="chip-title">USDT</span>
+              </label>
+            </div>
+          </fieldset>
+
+          <!-- Selector de Tipo de Tasa y Valor -->
+          <section class="rate-config-card" id="rate-config-card">
+            <fieldset class="form-fieldset no-margin">
+              <legend class="fieldset-legend">Tipo de tasa aplicada</legend>
+              <div class="segmented-control rate-control" role="radiogroup" aria-label="Tipo de tasa">
+                <input type="radio" name="rateType" id="rate-bcv-usd" value="BCV" checked class="visually-hidden">
+                <label for="rate-bcv-usd" class="control-chip mini">
+                  <span>BCV $</span>
+                </label>
+
+                <input type="radio" name="rateType" id="rate-bcv-eur" value="BCV_EUR" class="visually-hidden">
+                <label for="rate-bcv-eur" class="control-chip mini">
+                  <span>BCV €</span>
+                </label>
+
+                <input type="radio" name="rateType" id="rate-paralelo" value="PARALELO" class="visually-hidden">
+                <label for="rate-paralelo" class="control-chip mini">
+                  <span>Paralelo</span>
+                </label>
+
+                <input type="radio" name="rateType" id="rate-custom" value="CUSTOM" class="visually-hidden">
+                <label for="rate-custom" class="control-chip mini">
+                  <span>Manual</span>
+                </label>
+              </div>
+            </fieldset>
+
+            <!-- Campo dinámico para valor de la tasa -->
+            <div class="rate-input-row" id="rate-value-container">
+              <label for="rate-value-input" class="rate-input-label">Tasa de cambio (VES):</label>
+              <div class="rate-input-box">
+                <span class="rate-input-prefix">Bs.</span>
+                <input 
+                  type="text" 
+                  id="rate-value-input" 
+                  name="rateValue"
+                  class="rate-field-input" 
+                  inputmode="decimal" 
+                  value="45.20" 
+                  placeholder="0.00"
+                  required
+                >
+              </div>
+            </div>
+          </section>
+
+          <!-- Selector Rápido de Categorías (Pills Dinámicos de 1 toque) -->
+          <fieldset class="form-fieldset">
+            <legend class="fieldset-legend">Categoría</legend>
+            <div class="categories-grid" id="category-options-container" role="radiogroup" aria-label="Categoría del gasto">
+              <!-- Renderizado dinámicamente vía categoryManager -->
+            </div>
+          </fieldset>
+
+          <!-- Campo Opcional de Nota / Comercio -->
+          <div class="form-field-group">
+            <label for="expense-note" class="field-label-subtle">Nota o comercio (opcional)</label>
+            <input 
+              type="text" 
+              id="expense-note" 
+              name="note"
+              class="form-text-input" 
+              placeholder="Ej. Almuerzo Panadería, Farmatodo, Pasaje..." 
+              maxlength="120"
+            >
+          </div>
+
+          <!-- Botón de Envío Ergonómico -->
+          <div class="submit-action-wrapper">
+            <button type="submit" id="btn-submit-expense" class="btn-primary-action">
+              <span class="btn-icon-plus">+</span>
+              <span class="btn-text">Registrar Gasto</span>
+            </button>
+          </div>
+
+        </form>
+      </section>
+
+      <!-- 2. VISTA: HISTORIAL DE MOVIMIENTOS (#view-history) -->
+      <section id="view-history" class="app-view" aria-label="Historial de movimientos" hidden>
+        <div class="recent-movements-section" aria-labelledby="movements-title">
+          <div class="movements-header">
+            <h2 id="movements-title" class="movements-title">Últimos Movimientos</h2>
+            <span class="movements-counter" id="movements-counter">3 registros</span>
+          </div>
+
+          <!-- Filtros Rápidos por Categoría -->
+          <div class="history-filters" id="history-filters-container" role="toolbar" aria-label="Filtro de movimientos por categoría">
+            <!-- Renderizado dinámicamente vía categoryManager -->
+          </div>
+
+          <div class="movements-list" id="movements-list">
+            <!-- Renderizado dinámicamente vía render.transactionsFeed() -->
+          </div>
+        </div>
+      </section>
+
+      <!-- 3. VISTA: RESUMEN GRÁFICO / ANALYTICS (#view-analytics) -->
+      <section id="view-analytics" class="app-view" aria-label="Resumen gráfico de gastos" hidden>
+        <div class="analytics-section">
+          <div class="analytics-header">
+            <div>
+              <h2 class="analytics-title">Resumen Financiero</h2>
+              <p class="analytics-subtitle">Balance y distribución normalizada en USD</p>
+            </div>
+            <span class="analytics-badge" id="chart-period-badge">Este Mes</span>
+          </div>
+
+          <!-- Filtro Rápido de Período (3 chips) -->
+          <div class="period-filter-toolbar" role="toolbar" aria-label="Filtro de período para análisis de gastos">
+            <button type="button" class="period-chip" data-period="week">Esta Semana</button>
+            <button type="button" class="period-chip is-active" data-period="month">Este Mes</button>
+            <button type="button" class="period-chip" data-period="all">Todo el Historial</button>
+          </div>
+
+          <!-- Tarjetas KPI -->
+          <div class="analytics-kpi-grid">
+            <div class="kpi-card">
+              <span class="kpi-label">Total gastado</span>
+              <strong class="kpi-value" id="kpi-total-usd">$0.00</strong>
+              <span class="kpi-trend" id="kpi-count-trans">0 gastos</span>
+            </div>
+            <div class="kpi-card">
+              <span class="kpi-label">Mayor impacto</span>
+              <strong class="kpi-value" id="kpi-top-cat">-</strong>
+              <span class="kpi-detail" id="kpi-top-pct">-</span>
+            </div>
+            <div class="kpi-card">
+              <span class="kpi-label">Ticket promedio</span>
+              <strong class="kpi-value" id="kpi-avg-usd">$0.00</strong>
+              <span class="kpi-detail">Por registro</span>
+            </div>
+          </div>
+
+          <!-- Tarjeta del Gráfico Donut y Desglose -->
+          <div class="analytics-chart-card">
+            <div class="chart-card-header">
+              <h3 class="chart-card-title">Distribución por Categorías</h3>
+              <span class="chart-tag" id="chart-tag-info">USD Normalizado</span>
+            </div>
+
+            <!-- Contenedor del Gráfico Circular Donut (SVG Dinámico) -->
+            <div class="analytics-chart-container" id="analytics-chart-container">
+              <!-- Renderizado dinámicamente vía analyticsManager -->
+            </div>
+
+            <!-- Ranking y Leyenda Desglosada -->
+            <div class="chart-breakdown-wrapper">
+              <h4 class="breakdown-subtitle">Desglose Ordenado por Consumo</h4>
+              <div class="chart-bars-list" id="analytics-categories-bars">
+                <!-- Renderizado dinámicamente vía analyticsManager -->
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+    </main>
+
+    <!-- Barra de Navegación Inferior Fija para Móviles (.bottom-nav) -->
+    <nav class="bottom-nav" aria-label="Navegación móvil">
+      <button type="button" class="nav-item is-active" data-view="view-register" aria-selected="true" aria-controls="view-register">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M12 5v14M5 12h14"/>
+        </svg>
+        <span class="nav-label">Registrar</span>
+      </button>
+
+      <button type="button" class="nav-item" data-view="view-history" aria-selected="false" aria-controls="view-history">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M12 8v4l3 3m6-3a9 9 0 1 1-18 0 9 9 0 0 1 18 0z"/>
+        </svg>
+        <span class="nav-label">Historial</span>
+      </button>
+
+      <button type="button" class="nav-item" data-view="view-analytics" aria-selected="false" aria-controls="view-analytics">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M18 20V10m-6 10V4m-6 10v6"/>
+        </svg>
+        <span class="nav-label">Resumen</span>
+      </button>
+    </nav>
+
+  </div>
+</div>
+
+  <!-- =====================================================================
+       Modal de Configuración y Selector de Temas (#theme-modal)
+       ===================================================================== -->
+  <div id="theme-modal" class="theme-modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="theme-modal-title" aria-hidden="true">
+    <div class="theme-modal-card">
+      
+      <div class="theme-modal-header">
+        <div class="theme-modal-title-wrap">
+          <h2 id="theme-modal-title" class="theme-modal-title">
+            <span class="modal-icon" aria-hidden="true">🎨</span>
+            <span>Temas del Sistema</span>
+          </h2>
+          <span class="theme-modal-subtitle">Personaliza la estética con 8 paletas suaves</span>
+        </div>
+
+        <button type="button" class="theme-modal-close-btn" id="btn-close-theme-modal" aria-label="Cerrar selector de temas">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="18" y1="6" x2="6" y2="18"></line>
+            <line x1="6" y1="6" x2="18" y2="18"></line>
+          </svg>
+        </button>
+      </div>
+
+      <div class="theme-modal-body">
+        <div class="themes-grid" role="radiogroup" aria-label="Paletas visuales">
+          
+          <!-- 1. Dark Slate (Por defecto) -->
+          <button type="button" class="theme-option-btn is-active" data-theme-id="dark-slate" role="radio" aria-checked="true" aria-label="Tema Dark Slate">
+            <span class="theme-swatch" style="--swatch-bg: #0e1626; --swatch-accent: #10b981;">
+              <span class="swatch-base" style="background-color: #0e1626;"></span>
+              <span class="swatch-accent-dot" style="background-color: #10b981;"></span>
+            </span>
+            <div class="theme-info">
+              <span class="theme-name">Dark Slate</span>
+              <span class="theme-tag">Por defecto</span>
+            </div>
+            <span class="theme-check-badge" aria-hidden="true">✓</span>
+          </button>
+
+          <!-- 2. Lila -->
+          <button type="button" class="theme-option-btn" data-theme-id="lila" role="radio" aria-checked="false" aria-label="Tema Lila">
+            <span class="theme-swatch" style="--swatch-bg: #1c1826; --swatch-accent: #c4b5fd;">
+              <span class="swatch-base" style="background-color: #1c1826;"></span>
+              <span class="swatch-accent-dot" style="background-color: #c4b5fd;"></span>
+            </span>
+            <div class="theme-info">
+              <span class="theme-name">Lila Suave</span>
+              <span class="theme-tag">Lavanda tenue</span>
+            </div>
+            <span class="theme-check-badge" aria-hidden="true">✓</span>
+          </button>
+
+          <!-- 3. Beige (Modo Claro) -->
+          <button type="button" class="theme-option-btn" data-theme-id="beige" role="radio" aria-checked="false" aria-label="Tema Beige Modo Claro">
+            <span class="theme-swatch" style="--swatch-bg: #f7f5f0; --swatch-accent: #a88d75;">
+              <span class="swatch-base" style="background-color: #f7f5f0;"></span>
+              <span class="swatch-accent-dot" style="background-color: #a88d75;"></span>
+            </span>
+            <div class="theme-info">
+              <span class="theme-name">Beige Lino</span>
+              <span class="theme-tag">Modo claro</span>
+            </div>
+            <span class="theme-check-badge" aria-hidden="true">✓</span>
+          </button>
+
+          <!-- 4. Rosa -->
+          <button type="button" class="theme-option-btn" data-theme-id="rosa" role="radio" aria-checked="false" aria-label="Tema Rosa">
+            <span class="theme-swatch" style="--swatch-bg: #211a20; --swatch-accent: #f472b6;">
+              <span class="swatch-base" style="background-color: #211a20;"></span>
+              <span class="swatch-accent-dot" style="background-color: #f472b6;"></span>
+            </span>
+            <div class="theme-info">
+              <span class="theme-name">Rosa Cuarzo</span>
+              <span class="theme-tag">Ciruela suave</span>
+            </div>
+            <span class="theme-check-badge" aria-hidden="true">✓</span>
+          </button>
+
+          <!-- 5. Cian -->
+          <button type="button" class="theme-option-btn" data-theme-id="cian" role="radio" aria-checked="false" aria-label="Tema Cian">
+            <span class="theme-swatch" style="--swatch-bg: #13202b; --swatch-accent: #38bdf8;">
+              <span class="swatch-base" style="background-color: #13202b;"></span>
+              <span class="swatch-accent-dot" style="background-color: #38bdf8;"></span>
+            </span>
+            <div class="theme-info">
+              <span class="theme-name">Cian Abisal</span>
+              <span class="theme-tag">Turquesa suave</span>
+            </div>
+            <span class="theme-check-badge" aria-hidden="true">✓</span>
+          </button>
+
+          <!-- 6. Verde -->
+          <button type="button" class="theme-option-btn" data-theme-id="verde" role="radio" aria-checked="false" aria-label="Tema Verde">
+            <span class="theme-swatch" style="--swatch-bg: #16211a; --swatch-accent: #86efac;">
+              <span class="swatch-base" style="background-color: #16211a;"></span>
+              <span class="swatch-accent-dot" style="background-color: #86efac;"></span>
+            </span>
+            <div class="theme-info">
+              <span class="theme-name">Verde Musgo</span>
+              <span class="theme-tag">Salvia pastel</span>
+            </div>
+            <span class="theme-check-badge" aria-hidden="true">✓</span>
+          </button>
+
+          <!-- 7. Nordic -->
+          <button type="button" class="theme-option-btn" data-theme-id="nordic" role="radio" aria-checked="false" aria-label="Tema Nordic">
+            <span class="theme-swatch" style="--swatch-bg: #1e293b; --swatch-accent: #93c5fd;">
+              <span class="swatch-base" style="background-color: #1e293b;"></span>
+              <span class="swatch-accent-dot" style="background-color: #93c5fd;"></span>
+            </span>
+            <div class="theme-info">
+              <span class="theme-name">Nordic Blue</span>
+              <span class="theme-tag">Azul hielo</span>
+            </div>
+            <span class="theme-check-badge" aria-hidden="true">✓</span>
+          </button>
+
+          <!-- 8. OLED -->
+          <button type="button" class="theme-option-btn" data-theme-id="oled" role="radio" aria-checked="false" aria-label="Tema OLED">
+            <span class="theme-swatch" style="--swatch-bg: #000000; --swatch-accent: #10b981;">
+              <span class="swatch-base" style="background-color: #000000;"></span>
+              <span class="swatch-accent-dot" style="background-color: #10b981;"></span>
+            </span>
+            <div class="theme-info">
+              <span class="theme-name">OLED Puro</span>
+              <span class="theme-tag">Negro absoluto</span>
+            </div>
+            <span class="theme-check-badge" aria-hidden="true">✓</span>
+          </button>
+
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- =====================================================================
+       Modal de Administración de Categorías (#category-modal)
+       ===================================================================== -->
+  <div id="category-modal" class="theme-modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="category-modal-title" aria-hidden="true">
+    <div class="theme-modal-card category-modal-card">
+      
+      <div class="theme-modal-header">
+        <div class="theme-modal-title-wrap">
+          <h2 id="category-modal-title" class="theme-modal-title">
+            <span class="modal-icon" aria-hidden="true">🏷️</span>
+            <span>Gestión de Categorías</span>
+          </h2>
+          <span class="theme-modal-subtitle">Crea o administra las categorías de tus gastos</span>
+        </div>
+
+        <button type="button" class="theme-modal-close-btn" id="btn-close-category-modal" aria-label="Cerrar administración de categorías">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="18" y1="6" x2="6" y2="18"></line>
+            <line x1="6" y1="6" x2="18" y2="18"></line>
+          </svg>
+        </button>
+      </div>
+
+      <div class="theme-modal-body category-modal-body">
+        
+        <!-- Formulario para Crear Categoría -->
+        <section class="cat-create-section">
+          <h3 class="cat-section-title">Nueva Categoría</h3>
+          <form id="category-create-form" class="category-create-form" novalidate>
+            <div class="cat-form-row">
+              <div class="cat-input-group flex-1">
+                <label for="new-cat-name" class="cat-field-label">Nombre de la categoría</label>
+                <input 
+                  type="text" 
+                  id="new-cat-name" 
+                  name="label" 
+                  class="form-text-input" 
+                  placeholder="Ej. Mascotas, Ropa, Gym..." 
+                  maxlength="25" 
+                  required
+                  autocomplete="off"
+                >
+              </div>
+
+              <div class="cat-input-group icon-group">
+                <label for="new-cat-icon" class="cat-field-label">Icono</label>
+                <input 
+                  type="text" 
+                  id="new-cat-icon" 
+                  name="icon" 
+                  class="form-text-input cat-icon-input" 
+                  value="🏷️" 
+                  maxlength="4" 
+                  required
+                  autocomplete="off"
+                >
+              </div>
+            </div>
+
+            <!-- Selector rápido de emojis -->
+            <div class="emoji-picker-wrap">
+              <span class="emoji-picker-label">Sugerencias rápidas de emojis:</span>
+              <div class="emoji-chips-grid" id="quick-emoji-grid">
+                <button type="button" class="emoji-chip is-selected" data-emoji="🏷️">🏷️</button>
+                <button type="button" class="emoji-chip" data-emoji="🍔">🍔</button>
+                <button type="button" class="emoji-chip" data-emoji="🛒">🛒</button>
+                <button type="button" class="emoji-chip" data-emoji="🚗">🚗</button>
+                <button type="button" class="emoji-chip" data-emoji="💡">💡</button>
+                <button type="button" class="emoji-chip" data-emoji="💊">💊</button>
+                <button type="button" class="emoji-chip" data-emoji="📦">📦</button>
+                <button type="button" class="emoji-chip" data-emoji="🎮">🎮</button>
+                <button type="button" class="emoji-chip" data-emoji="👕">👕</button>
+                <button type="button" class="emoji-chip" data-emoji="✈️">✈️</button>
+                <button type="button" class="emoji-chip" data-emoji="☕">☕</button>
+                <button type="button" class="emoji-chip" data-emoji="🏋️">🏋️</button>
+                <button type="button" class="emoji-chip" data-emoji="🐾">🐾</button>
+                <button type="button" class="emoji-chip" data-emoji="📚">📚</button>
+                <button type="button" class="emoji-chip" data-emoji="🎬">🎬</button>
+                <button type="button" class="emoji-chip" data-emoji="🏠">🏠</button>
+              </div>
+            </div>
+
+            <button type="submit" class="btn-create-category" id="btn-save-category">
+              <span>+ Añadir Categoría</span>
+            </button>
+          </form>
+        </section>
+
+        <!-- Lista de Categorías Activas y Opciones de Eliminar -->
+        <section class="cat-list-section">
+          <div class="cat-section-header">
+            <h3 class="cat-section-title">Categorías Activas</h3>
+            <span class="cat-count-badge" id="cat-count-badge">6</span>
+          </div>
+
+          <div class="category-management-list" id="category-management-list" role="list">
+            <!-- Renderizado dinámicamente -->
+          </div>
+        </section>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- =====================================================================
+       Modal de Autenticación de Usuarios (#modal-auth)
+       ===================================================================== -->
+  <div id="modal-auth" class="theme-modal-backdrop is-open" role="dialog" aria-modal="true" aria-labelledby="auth-modal-title" aria-hidden="false">
+    <div class="theme-modal-card auth-modal-card">
+      
+      <div class="theme-modal-header">
+        <div class="theme-modal-title-wrap">
+          <h2 id="auth-modal-title" class="theme-modal-title">
+            <span class="modal-icon" aria-hidden="true">🔐</span>
+            <span id="auth-header-title">Iniciar Sesión</span>
+          </h2>
+          <span class="theme-modal-subtitle" id="auth-header-subtitle">Accede a tus gastos y sincroniza tus datos</span>
+        </div>
+      </div>
+
+      <div class="theme-modal-body auth-modal-body">
+        
+        <!-- Pestañas de Alternancia: Iniciar Sesión / Crear Cuenta -->
+        <div class="auth-tabs" role="tablist" aria-label="Opciones de autenticación">
+          <button type="button" class="auth-tab-btn is-active" id="tab-login" role="tab" aria-selected="true" aria-controls="auth-form">
+            Iniciar Sesión
+          </button>
+          <button type="button" class="auth-tab-btn" id="tab-signup" role="tab" aria-selected="false" aria-controls="auth-form">
+            Crear Cuenta
+          </button>
+        </div>
+
+        <!-- Contenedor de Alertas / Errores de Supabase -->
+        <div id="auth-alert-box" class="auth-alert-box" role="alert" style="display: none;">
+          <span class="auth-alert-icon" id="auth-alert-icon">⚠️</span>
+          <span class="auth-alert-message" id="auth-alert-message"></span>
+        </div>
+
+        <!-- Formulario de Autenticación -->
+        <form id="auth-form" class="auth-form" novalidate>
+          <div class="auth-field-group">
+            <label for="auth-email" class="cat-field-label">Correo electrónico</label>
+            <div class="auth-input-wrapper">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="auth-input-icon">
+                <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path>
+                <polyline points="22,6 12,13 2,6"></polyline>
+              </svg>
+              <input 
+                type="email" 
+                id="auth-email" 
+                name="email" 
+                class="form-text-input auth-text-input" 
+                placeholder="tu@correo.com" 
+                required 
+                autocomplete="email"
+              >
+            </div>
+          </div>
+
+          <div class="auth-field-group">
+            <label for="auth-password" class="cat-field-label">Contraseña</label>
+            <div class="auth-input-wrapper">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="auth-input-icon">
+                <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+                <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+              </svg>
+              <input 
+                type="password" 
+                id="auth-password" 
+                name="password" 
+                class="form-text-input auth-text-input" 
+                placeholder="Mínimo 6 caracteres" 
+                required 
+                minlength="6"
+                autocomplete="current-password"
+              >
+              <button type="button" class="btn-toggle-password" id="btn-toggle-password" aria-label="Mostrar u ocultar contraseña" tabindex="-1">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                  <circle cx="12" cy="12" r="3"></circle>
+                </svg>
+              </button>
+            </div>
+          </div>
+
+          <button type="submit" class="btn-auth-submit" id="btn-auth-submit">
+            <span class="auth-btn-spinner" id="auth-btn-spinner" style="display: none;"></span>
+            <span id="auth-btn-text">Iniciar Sesión</span>
+          </button>
+        </form>
+
+        <div class="auth-footer-help">
+          <span id="auth-switch-prompt">¿No tienes cuenta todavía?</span>
+          <button type="button" class="btn-auth-link" id="btn-auth-switch-mode">Regístrate gratis</button>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- CDN Oficial de Supabase Client JS (v2) -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+  <!-- Inicialización de Cliente y Módulos -->
+  <script src="supabaseClient.js"></script>
+  <script src="authManager.js"></script>
+  <script src="syncManager.js"></script>
+  <script src="ratesManager.js"></script>
+
+  <!-- Capa de Reactividad y Persistencia Local -->
+  <script src="app.js"></script>
+</body>
+</html>
