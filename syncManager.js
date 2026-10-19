@@ -20,6 +20,19 @@ const syncManager = {
   init() {
     this.updateOnlineStatus();
 
+    // Permitir forzar sincronización manual tocando la píldora de estado
+    const pill = document.getElementById('offline-pill');
+    if (pill) {
+      pill.style.cursor = 'pointer';
+      pill.setAttribute('title', 'Toca para forzar sincronización con la nube');
+      pill.addEventListener('click', () => {
+        if (this.isOnline()) {
+          console.log('🔄 [syncManager] Sincronización manual iniciada por el usuario.');
+          this.syncPendingQueue();
+        }
+      });
+    }
+
     // Eventos nativos del navegador de conectividad
     window.addEventListener('online', () => {
       console.log('🌐 [GastosYa] Conexión a internet restablecida.');
@@ -41,6 +54,11 @@ const syncManager = {
         }
       }
     });
+
+    // Si al arrancar la app ya hay conexión y elementos en cola, intentar sincronizar
+    if (this.isOnline() && this.getQueue().length > 0) {
+      setTimeout(() => this.syncPendingQueue(), 800);
+    }
   },
 
   /**
@@ -92,6 +110,11 @@ const syncManager = {
     }
     this.saveQueue(queue);
     console.log(`📦 [syncManager] Transacción encolada offline (${queue.length} en espera).`);
+
+    // Si estamos online y el usuario está autenticado, intentar sincronizar de inmediato
+    if (this.isOnline() && window.authManager?.currentUser) {
+      setTimeout(() => this.syncPendingQueue(), 200);
+    }
   },
 
   /**
@@ -110,7 +133,7 @@ const syncManager = {
     try {
       localStorage.removeItem(this.queueKey);
       this.updateOnlineStatus();
-    } catch (e) {}
+    } catch (e) { }
   },
 
   /**
@@ -155,7 +178,10 @@ const syncManager = {
 
     const client = window.supabaseClient;
     const user = window.authManager?.currentUser;
-    if (!client || !user) return;
+    if (!client || !user) {
+      this.updateOnlineStatus();
+      return;
+    }
 
     const queue = this.getQueue();
     if (queue.length === 0) {
@@ -171,31 +197,60 @@ const syncManager = {
 
     for (const item of queue) {
       try {
+        // Resolver y sanear category_id a UUID válido o null para evitar error 22P02 en PostgreSQL
+        let catId = null;
+        if (typeof window.resolveCategoryId === 'function') {
+          catId = window.resolveCategoryId(item.category_id || item.category);
+        } else if (typeof window.isValidUUID === 'function' && window.isValidUUID(item.category_id)) {
+          catId = item.category_id;
+        }
+
         const payload = {
           user_id: user.id,
-          category_id: item.category_id || item.category || null,
+          category_id: catId,
           amount_original: Number(item.amountOriginal),
           currency: item.currencyOriginal,
-          rate_type: typeof window.mapRateTypeToDB === 'function' 
-            ? window.mapRateTypeToDB(item.rateType, item.currencyOriginal) 
+          rate_type: typeof window.mapRateTypeToDB === 'function'
+            ? window.mapRateTypeToDB(item.rateType, item.currencyOriginal)
             : (item.rateType || 'NONE'),
-          rate_value: Number(item.rateValue) || 1.0,
-          amount_usd: Number(item.amountUSD),
-          note: item.note ? item.note.trim() : null,
+          rate_value: Math.max(0.0001, Number(item.rateValue) || 1.0),
+          amount_usd: Math.max(0.01, Number(item.amountUSD) || 0.01),
+          note: item.note ? String(item.note).trim() : null,
           spent_at: item.timestamp || item.spent_at || new Date().toISOString()
         };
 
-        const { data, error } = await client
+        let { data, error } = await client
           .from('transactions')
           .insert([payload])
           .select()
           .single();
 
+        // Rescate defensivo: si falló por sintaxis UUID (22P02) o clave foránea (23503), reintentar con null
+        if (error && (error.code === '22P02' || error.code === '23503' || (error.message && error.message.includes('uuid')))) {
+          console.warn('[syncManager] Reintentando sincronización con category_id = null...');
+          payload.category_id = null;
+          const retryRes = await client
+            .from('transactions')
+            .insert([payload])
+            .select()
+            .single();
+          data = retryRes.data;
+          error = retryRes.error;
+        }
+
         if (error) {
-          console.error('[syncManager] Error al sincronizar transacción:', error.message);
-          // Si el error es de conectividad, pausar y reintentar más tarde
-          if (error.message && (error.message.includes('fetch') || error.message.includes('network'))) {
+          console.error('[syncManager] Error al sincronizar transacción:', error.message, error);
+
+          // Si el error es de conectividad, pausar y reintentar cuando vuelva la red
+          if (error.message && (error.message.includes('fetch') || error.message.includes('network') || error.message.includes('Failed to fetch'))) {
             break;
+          }
+
+          // Si es un error irrecuperable de base de datos, contar reintentos
+          item._errorCount = (item._errorCount || 0) + 1;
+          if (item._errorCount >= 3) {
+            console.error(`❌ [syncManager] Transacción ${item.id} descartada de la cola tras 3 rechazos: ${error.message}`);
+            syncedItems.push({ tempId: item.id, discarded: true });
           }
         } else if (data) {
           syncedItems.push({ tempId: item.id, newId: data.id });
@@ -207,7 +262,7 @@ const syncManager = {
     }
 
     if (syncedItems.length > 0) {
-      // 1. Remover ítems exitosos de la cola
+      // 1. Remover ítems exitosos o descartados de la cola
       const remainingQueue = this.getQueue().filter(
         item => !syncedItems.some(s => s.tempId === item.id)
       );
@@ -218,7 +273,7 @@ const syncManager = {
         syncedItems.forEach(({ tempId, newId }) => {
           const tx = window.state.transactions.find(t => t.id === tempId);
           if (tx) {
-            tx.id = newId;
+            if (newId) tx.id = newId;
             tx._pendingSync = false;
           }
         });
@@ -234,7 +289,7 @@ const syncManager = {
         }
       }
 
-      console.log(`✅ [syncManager] ${syncedItems.length} transacciones sincronizadas con éxito en Supabase.`);
+      console.log(`✅ [syncManager] ${syncedItems.length} transacciones procesadas con éxito desde la cola.`);
     }
 
     this.isSyncing = false;

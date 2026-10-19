@@ -14,7 +14,7 @@
     if (saved) {
       document.documentElement.setAttribute('data-theme', saved);
     }
-  } catch (e) {}
+  } catch (e) { }
 })();
 
 // ============================================================================
@@ -53,12 +53,12 @@ const CATEGORIES_STORAGE_KEY = 'gastosya_categories';
 
 // Categorías iniciales por defecto (Requerimiento Paso 3)
 const DEFAULT_CATEGORIES = [
-  { id: 'comida',     label: 'Comida',     icon: '🍔', isDefault: true },
-  { id: 'mercado',    label: 'Mercado',    icon: '🛒', isDefault: true },
+  { id: 'comida', label: 'Comida', icon: '🍔', isDefault: true },
+  { id: 'mercado', label: 'Mercado', icon: '🛒', isDefault: true },
   { id: 'transporte', label: 'Transporte', icon: '🚗', isDefault: true },
-  { id: 'servicios',  label: 'Servicios',  icon: '💡', isDefault: true },
-  { id: 'farmacia',   label: 'Farmacia',   icon: '💊', isDefault: true },
-  { id: 'otros',      label: 'Otros',      icon: '📦', isDefault: true }
+  { id: 'servicios', label: 'Servicios', icon: '💡', isDefault: true },
+  { id: 'farmacia', label: 'Farmacia', icon: '💊', isDefault: true },
+  { id: 'otros', label: 'Otros', icon: '📦', isDefault: true }
 ];
 
 // Mapeo visual y semántico de categorías (sincronizado dinámicamente)
@@ -80,6 +80,39 @@ function mapRateTypeToDB(rateType, currency) {
   return 'MANUAL';
 }
 window.mapRateTypeToDB = mapRateTypeToDB;
+
+/**
+ * Valida si un string cumple el formato UUID estándar (PostgreSQL)
+ */
+function isValidUUID(str) {
+  return typeof str === 'string' && /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(str);
+}
+window.isValidUUID = isValidUUID;
+
+/**
+ * Resuelve un ID o slug de categoría a un UUID válido existente en Postgres.
+ * Si el ID recibido no es un UUID (ej: 'comida', 'mercado'), busca en state.categories
+ * para obtener el UUID correspondiente.
+ * Si no encuentra un UUID válido, retorna null para evitar errores de sintaxis (22P02) en Postgres.
+ */
+function resolveCategoryId(catId) {
+  if (!catId) return null;
+  if (isValidUUID(catId)) return catId;
+
+  if (typeof state !== 'undefined' && Array.isArray(state.categories)) {
+    const found = state.categories.find(c =>
+      c.id === catId ||
+      (c.name && c.name.toLowerCase() === String(catId).toLowerCase()) ||
+      (c.label && c.label.toLowerCase() === String(catId).toLowerCase())
+    );
+    if (found && isValidUUID(found.id)) {
+      return found.id;
+    }
+  }
+
+  return null;
+}
+window.resolveCategoryId = resolveCategoryId;
 
 /**
  * Convierte un registro de la tabla Supabase 'transactions' al modelo frontend
@@ -108,14 +141,14 @@ function dbToFrontendTx(row) {
  */
 function frontendToDbTx(tx, userId) {
   return {
-    id: tx.id,
+    ...(isValidUUID(tx.id) ? { id: tx.id } : {}),
     user_id: userId,
-    category_id: tx.category_id || tx.category || null,
+    category_id: resolveCategoryId(tx.category_id || tx.category),
     amount_original: Number(tx.amountOriginal),
     currency: tx.currencyOriginal,
     rate_type: mapRateTypeToDB(tx.rateType, tx.currencyOriginal),
-    rate_value: Number(tx.rateValue) || 1.0,
-    amount_usd: Number(tx.amountUSD),
+    rate_value: Math.max(0.0001, Number(tx.rateValue) || 1.0),
+    amount_usd: Math.max(0.01, Number(tx.amountUSD) || 0.01),
     note: tx.note ? tx.note.trim() : null,
     spent_at: tx.timestamp || tx.spent_at || new Date().toISOString()
   };
@@ -159,8 +192,8 @@ const calculator = {
 
     // Normalización desde Euros (Conversión cruzada EUR -> USD)
     if (currencyOriginal === 'EUR') {
-      const crossRate = this.parseNumber(rateValue) > 0 
-        ? this.parseNumber(rateValue) 
+      const crossRate = this.parseNumber(rateValue) > 0
+        ? this.parseNumber(rateValue)
         : state.rates.EUR_USD;
       return Math.round(amount * crossRate * 100) / 100;
     }
@@ -272,23 +305,23 @@ const calculator = {
 
     const now = new Date();
     const isToday = date.toDateString() === now.toDateString();
-    
+
     const yesterday = new Date(now);
     yesterday.setDate(now.getDate() - 1);
     const isYesterday = date.toDateString() === yesterday.toDateString();
 
-    const timeStr = date.toLocaleTimeString('es-VE', { 
-      hour: 'numeric', 
-      minute: '2-digit', 
-      hour12: true 
+    const timeStr = date.toLocaleTimeString('es-VE', {
+      hour: 'numeric',
+      minute: '2-digit',
+      hour12: true
     });
 
     if (isToday) return `Hoy, ${timeStr}`;
     if (isYesterday) return `Ayer, ${timeStr}`;
 
-    const dateStr = date.toLocaleDateString('es-VE', { 
-      day: 'numeric', 
-      month: 'short' 
+    const dateStr = date.toLocaleDateString('es-VE', {
+      day: 'numeric',
+      month: 'short'
     });
     return `${dateStr}, ${timeStr}`;
   }
@@ -359,8 +392,8 @@ const render = {
       }
     );
 
-    const previewEl = this.elements.previewUSD || 
-      document.getElementById('equivalent-amount') || 
+    const previewEl = this.elements.previewUSD ||
+      document.getElementById('equivalent-amount') ||
       document.getElementById('preview-usd-value');
 
     if (previewEl) {
@@ -722,28 +755,43 @@ const handlers = {
     // Intentar inserción directa en Supabase si hay conexión
     if (isOnline && client) {
       try {
+        const catUuid = resolveCategoryId(categoryId);
         const dbPayload = {
           user_id: user.id,
-          category_id: categoryId,
+          category_id: catUuid,
           amount_original: amountVal,
           currency: state.currentCurrency,
           rate_type: dbRateType,
-          rate_value: rateValue,
-          amount_usd: amountUSD,
+          rate_value: Math.max(0.0001, rateValue),
+          amount_usd: Math.max(0.01, amountUSD),
           note: noteVal || null,
           spent_at: nowIso
         };
 
-        const { data, error } = await client
+        let { data, error } = await client
           .from('transactions')
           .insert([dbPayload])
           .select()
           .single();
 
+        // Rescate defensivo: si falló por sintaxis UUID (22P02) o clave foránea (23503), reintentar con null
+        if (error && (error.code === '22P02' || error.code === '23503' || (error.message && error.message.includes('uuid')))) {
+          console.warn('⚠️ [GastosYa] Reintentando inserción con category_id = null...');
+          dbPayload.category_id = null;
+          const retryRes = await client
+            .from('transactions')
+            .insert([dbPayload])
+            .select()
+            .single();
+          data = retryRes.data;
+          error = retryRes.error;
+        }
+
         if (error) {
           console.warn('⚠️ [GastosYa] Error al insertar en Supabase, enviando a cola offline:', error.message);
         } else if (data) {
           newTx.id = data.id; // Asignar UUID definitivo generado por PostgreSQL
+          if (catUuid) newTx.category_id = catUuid;
           savedRemotely = true;
         }
       } catch (err) {
@@ -775,8 +823,8 @@ const handlers = {
     const submitBtn = render.elements.submitBtn;
     if (submitBtn) {
       const origText = submitBtn.innerHTML;
-      submitBtn.innerHTML = savedRemotely 
-        ? `<span>✓ ¡Registrado!</span>` 
+      submitBtn.innerHTML = savedRemotely
+        ? `<span>✓ ¡Registrado!</span>`
         : `<span>☁️ Guardado (Offline)</span>`;
       setTimeout(() => {
         submitBtn.innerHTML = origText;
@@ -917,7 +965,7 @@ async function loadTransactionsFromSupabase(userId) {
       render.transactionsFeed();
       analyticsManager.render();
     }
-  } catch (e) {}
+  } catch (e) { }
 
   // Consultar Supabase ordenado por fecha de gasto descendente
   try {
@@ -964,7 +1012,7 @@ function generateUUID() {
   if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') {
     return crypto.randomUUID();
   }
-  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function (c) {
     const r = Math.random() * 16 | 0;
     const v = c === 'x' ? r : (r & 0x3 | 0x8);
     return v.toString(16);
@@ -1052,12 +1100,12 @@ const analyticsManager = {
 
   // Paleta armónica distintiva para segmentos del gráfico donut y barras
   colors: {
-    comida:     '#f59e0b',
-    mercado:    '#38bdf8',
+    comida: '#f59e0b',
+    mercado: '#38bdf8',
     transporte: '#3b82f6',
-    servicios:  '#eab308',
-    farmacia:   '#ef4444',
-    otros:      '#a855f7'
+    servicios: '#eab308',
+    farmacia: '#ef4444',
+    otros: '#a855f7'
   },
 
   palette: [
@@ -1476,7 +1524,7 @@ const categoryManager = {
     }
 
     try {
-      const { data, error } = await client
+      let { data, error } = await client
         .from('categories')
         .select('*')
         .eq('user_id', userId)
@@ -1486,6 +1534,32 @@ const categoryManager = {
         console.warn('[categoryManager] Error cargando de Supabase:', error.message);
         this.loadFromStorage();
         return;
+      }
+
+      // Si el usuario no tiene categorías en Supabase (ej: trigger ausente o fallido), sembrarlas de inmediato
+      if (!Array.isArray(data) || data.length === 0) {
+        console.log('🌱 [categoryManager] Usuario sin categorías en Supabase, inicializando categorías iniciales...');
+        const defaultPayload = [
+          { user_id: userId, name: 'Comida', icon: '🍔', color: '#f59e0b', is_default: true },
+          { user_id: userId, name: 'Mercado', icon: '🛒', color: '#10b981', is_default: true },
+          { user_id: userId, name: 'Transporte', icon: '🚗', color: '#3b82f6', is_default: true },
+          { user_id: userId, name: 'Servicios', icon: '💡', color: '#8b5cf6', is_default: true },
+          { user_id: userId, name: 'Farmacia', icon: '💊', color: '#ec4899', is_default: true },
+          { user_id: userId, name: 'Otros', icon: '📦', color: '#64748b', is_default: true }
+        ];
+
+        try {
+          const seedResult = await client
+            .from('categories')
+            .insert(defaultPayload)
+            .select();
+
+          if (!seedResult.error && Array.isArray(seedResult.data) && seedResult.data.length > 0) {
+            data = seedResult.data;
+          }
+        } catch (seedErr) {
+          console.warn('[categoryManager] Excepción sembrando categorías en Supabase:', seedErr);
+        }
       }
 
       if (Array.isArray(data) && data.length > 0) {
@@ -1835,7 +1909,7 @@ const categoryManager = {
 const themeManager = {
   // Clave de almacenamiento persistente en localStorage
   STORAGE_KEY: 'gastosya_theme',
-  
+
   // Tema predeterminado
   DEFAULT_THEME: 'dark-slate',
 
