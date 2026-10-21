@@ -381,11 +381,11 @@ const authManager = {
    * @param {string|null} email
    */
   updateUserSessionUI(email) {
-    const { 
-      settingsUserEmail, 
-      settingsAccountStatus, 
-      userSessionInfo, 
-      userEmailDisplay 
+    const {
+      settingsUserEmail,
+      settingsAccountStatus,
+      userSessionInfo,
+      userEmailDisplay
     } = this.elements;
 
     if (email) {
